@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔥测测你的「宿舍人格」，看看你是哪种室友？</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "微软雅黑", sans-serif;
+        }
+        body {
+            background: #f0f5ff;
+            color: #333;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .page {
+            display: none;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .page.active {
+            display: block;
+        }
+        h1, h2 {
+            color: #4285f4;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .desc {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: #4285f4;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.2s;
+        }
+        .btn:hover {
+            background: #3367d6;
+        }
+        .option {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .option:hover {
+            background: #e8f0fe;
+            border-color: #4285f4;
+        }
+        #progress {
+            text-align: right;
+            color: #999;
+            margin-bottom: 10px;
+        }
+        .persona-tag {
+            font-size: 20px;
+            font-weight: bold;
+            color: #4285f4;
+            margin: 15px 0;
+        }
+        .persona-desc {
+            line-height: 1.8;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 首页 -->
+    <div id="page0" class="page active">
+        <h1>🔥测测你的「宿舍人格」，看看你是哪种室友？</h1>
+        <p class="desc">宿舍生存法则，从认清自己开始！<br>30题宿舍人格测试，从作息、卫生到矛盾处理，精准戳中你的宿舍相处模式。<br>无对错、纯娱乐，凭第一直觉选就行，测完解锁你的专属「宿舍人设」！</p>
+        <button class="btn" onclick="startTest()">开始测试</button>
+    </div>
+
+    <!-- 答题页 -->
+    <div id="page1" class="page">
+        <div id="progress"></div>
+        <h3 id="question"></h3>
+        <div id="options"></div>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="page2" class="page">
+        <h2>OK啊我直接告诉你你的宿舍人格是</h2>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // 题目列表（30题，3个选项，对应维度：E/I S/N T/F J/P）
+        const questions = [
+            // E/I 7题
+            {q:"1. 周末躺平时，你更想？", opts:["A 拉上室友出门干饭、压马路看电影唱K美美拍照", "B 宅宿舍独处、安静回血中···", "C 看室友，有人约就出门，没人约就躺平"], dim:"EI"},
+            {q:"2. 宿舍开卧谈会，你会？", opts:["A 疯狂输出，把话题聊爆，低山臭水觅知音", "B 默默听着，偶尔“哈哈哈”附和，实则心累", "C 被cue到才说两句，不主动也不冷场"], dim:"EI"},
+            {q:"3. 吃到好吃的/遇到瓜，你会？", opts:["A 立刻全宿舍播报，共享快乐", "B 自己偷偷吃/默默吃瓜，懒得说", "C 只和关系好的室友分享，不公开说"], dim:"EI"},
+            {q:"4. 和室友闹了小别扭，你会？", opts:["A 说开就翻篇，不冷战，一笑泯恩仇", "B 先躲进床帘悄悄emo，自己消化情绪", "C 假装没事，等对方先示好，记仇+1"], dim:"EI"},
+            {q:"5. 宿舍里有人时，你会？", opts:["A 话多到停不下来，越聊越嗨", "B 只想安静玩手机，不想说话", "C 礼貌回应，不主动搭话"], dim:"EI"},
+            {q:"6. 面对刚认识的新室友，你会？", opts:["A 主动搭话，快速打成一片", "B 保持礼貌距离，等对方先开口，我感觉你好高冷", "C 靠共同话题慢慢熟络，不刻意也不冷淡"], dim:"EI"},
+            {q:"7. 宿舍人越多，你越？", opts:["A 兴奋！人多热闹才好玩", "B 疲惫！只想找个地方躲起来", "C 无所谓，不影响自己的状态"], dim:"EI"},
+
+            // S/N 7题
+            {q:"8. 你的作息属于？", opts:["A 早睡早起的“老年养生党”", "B 熬夜探究者，作息随缘放飞", "C 平时早睡，周末熬夜放飞"], dim:"SN"},
+            {q:"9. 宿舍卫生方面，你是？", opts:["A 桌面一尘不染，强迫症本人", "B 乱中有序，能忍就不收拾", "C 自己的桌面干净，公共区域随缘"], dim:"SN"},
+            {q:"10. 你最容易和室友因为啥闹矛盾？", opts:["A 作息、卫生这些宿舍细节小事", "B 感觉氛围不对，莫名不舒服", "C 原则问题（如借钱、边界）被踩雷"], dim:"SN"},
+            {q:"11. 遇到宿舍问题，你会怎么解决？", opts:["A 直接说事实，最不绕弯子、最直白、最简单···", "B 先顾着对方情绪，不敢直说", "C 找个中间人帮忙说，避免直接冲突"], dim:"SN"},
+            {q:"12. 对待宿舍值日/分工，你？", opts:["A 喜欢排好表，谁也别想偷懒", "B 差不多就行，不用那么较真", "C 轮到自己就认真做，别人的事不插手"], dim:"SN"},
+            {q:"13. 宿舍AA/凑单时，你？", opts:["A 算得清清楚楚，一分不差", "B 差不多就行，基本的A钱素质要有，但是懒得细算", "C 按人头分，多一点少一点无所谓"], dim:"SN"},
+            {q:"14. 和室友相处，你更看重？", opts:["A 靠谱！有事能互相搭把手", "B 合得来！聊得来最重要", "C 边界感！互不打扰就很舒服"], dim:"SN"},
+
+            // T/F 8题
+            {q:"15. 室友外放刷视频/打游戏吵到你，你会？", opts:["A 直接提醒“戴个耳机呗”", "B 默默忍了，怕说出来尴尬", "C 先戴耳机忍几天，忍不了再说"], dim:"TF"},
+            {q:"16. 室友借了你的东西/钱没还，你会？", opts:["A 直接开口提醒", "B 顾及面子不好意思催，自己默默纠结", "C 借东西会主动要回，借钱看情况委婉提"], dim:"TF"},
+            {q:"17. 宿舍有分歧吵起来，你会？", opts:["A 就事论事，讲道理分对错", "B 怕伤和气，先顺着对方说", "C 先冷静，等情绪过了再讨论问题"], dim:"TF"},
+            {q:"18. 被室友吐槽/误会，你会？", opts:["A 当场解释清楚，不纠结", "B 越想越难过，偷偷内耗", "C 表面不在意，心里会反复琢磨"], dim:"TF"},
+            {q:"19. 室友emo/难过时，你会？", opts:["A 给建议、想办法解决问题", "B 陪在旁边，默默递纸巾/安慰", "C 看对方状态，想说话就陪聊，不想说就不打扰"], dim:"TF"},
+            {q:"20. 宿舍有矛盾，你更在意？", opts:["A 谁对谁错，要公平", "B 大家别僵住，别闹太难看", "C 自己别被牵连，能和稀泥就和稀泥"], dim:"TF"},
+            {q:"21. 室友主动让着你/妥协，你会觉得？", opts:["A 应该的，本来就是他的问题", "B 有点过意不去，觉得对方委屈了", "C 会记着对方的好，下次也让着对方"], dim:"TF"},
+            {q:"22. 宿舍相处中遇到舍友做了你不太接受得了的过分的事情，你更吃哪一套？", opts:["A 按规则来，谁也不搞特殊", "B 大家都是室友，多包容一点", "C 规则底线内包容，越界的事绝不忍"], dim:"TF"},
+
+            // J/P 8题
+            {q:"23. 轮到你值日/打扫卫生，你会？", opts:["A 按时完成，绝不拖延", "B 拖到最后，能忘就忘", "C 提前做一点，随便扫扫得了"], dim:"JP"},
+            {q:"24. 你的桌面物品摆放经常是什么状态？", opts:["A 整整齐齐，一目了然，简直收纳天才", "B 随手一放，乱点没关系，这样有生活气息", "C 半乱半整齐，明明是艺术"], dim:"JP"},
+            {q:"25. 面对宿舍矛盾，你会？", opts:["A 赶紧解决，别拖着", "B 我不擅长处理这些事情，等它自己过去", "C 能沟通就沟通，沟通不了就冷处理"], dim:"JP"},
+            {q:"26. 宿舍一起做事（比如买东西/打扫），你会？", opts:["A 提前说好计划，按步骤来", "B 临时决定，想到再说", "C 听大家的意见，少数服从多数"], dim:"JP"},
+            {q:"27. 平时做事，你是？", opts:["A 不拖延，自律高手，说到做到", "B 重度拖延，佛脚当抱枕，不到最后不行动", "C 偶尔自律一下让你看看我高精力的样子"], dim:"JP"},
+            {q:"28. 宿舍相处的底线，你会？", opts:["A 划得很清，不能碰", "B 比较佛系，能包容就包容", "C 小问题可以包容，原则问题绝不退让"], dim:"JP"},
+            {q:"29. 室友约好的事，你会？", opts:["A 说到做到，绝不爽约", "B 看情况，不行就改期/鸽了", "C 提前确认时间，临时有事会提前说"], dim:"JP"},
+            {q:"30. 宿舍出了问题，你会？", opts:["A 主动调整，想办法解决", "B 顺其自然，被动适应就好", "C 先看看别人的反应，再决定自己怎么做"], dim:"JP"}
+        ];
+
+        // 8种人格结果
+        const personas = {
+            "ESFJ": {
+                tag: "☀️ SUN-R｜宿舍小太阳",
+                desc: "人设标签：暖心老好人・宿舍粘合剂<br><br>解析：你就是宿舍里的“暖心小天使”，作息规律爱干净，还总记着室友的生日和小喜好。矛盾时你永远先低头，怕大家闹僵，是宿舍的“情绪稳定器”。但有时候也别太委屈自己啦，你的付出值得被看见！<br><br>网感梗：宿舍版居委会大妈，主打一个 peace and love"
+            },
+            "ESTJ": {
+                tag: "📋 guanjia｜宿舍管家",
+                desc: "人设标签：靠谱规矩党・宿舍管理员<br><br>解析：你是宿舍里的“秩序天花板”，值日表、作息表、卫生标准全被你安排得明明白白。遇到矛盾直接讲道理，不搞冷战不绕弯，公平公正谁都挑不出错。室友有事找你准没错，就是偶尔有点太较真，下次可以温柔一点～<br><br>网感梗：宿舍版纪律委员，主打一个 “按规矩办事”"
+            },
+            "ENFP": {
+                tag: "🎉 Happy Happy Happy｜宿舍开心果",
+                desc: "人设标签：笑料制造者，脑洞气氛组・快乐制造机<br><br>解析：你就是宿舍的“快乐源泉”！熬夜冠军 + 卫生随缘选手，却总能靠整活和唠嗑把宿舍氛围拉满。矛盾时打哈哈就化解了，从不记仇，和谁都能处成朋友。唯一的缺点就是拖延症晚期，答应的事偶尔会忘，别被室友催更啦！<br><br>网感梗：宿舍版气氛担当，主打一个 “只要我不尴尬，尴尬的就是别人”"
+            },
+            "ENTP": {
+                tag: "🗣️ Battle-R｜宿舍辩手",
+                desc: "人设标签：毒舌脑洞王・矛盾调解者<br><br>解析：你是宿舍里的“理性杠精”，脑回路清奇，爱抬杠也爱讲道理。矛盾时你不站队，只讲逻辑，几句话就能把尴尬的氛围化解。就是嘴有点欠，偶尔会说者无意听者有心，下次说话前先过过脑子～<br><br>网感梗：宿舍版逻辑怪，主打一个 “万物皆可辩”"
+            },
+            "ISFJ": {
+                tag: "🥺 I'M FINE｜宿舍小透明",
+                desc: "人设标签：安静包容者・温柔小透明<br><br>解析：你是宿舍里的“治愈担当”，内向慢热，不爱说话却总默默照顾别人。作息干净、不爱惹事，矛盾时只会默默忍下委屈，怕吵架怕尴尬。共情力超强，室友emo时你永远第一个递上纸巾，就是别太委屈自己啦！<br><br>网感梗：宿舍版小哭包，主打一个 “我没事，你别担心”"
+            },
+            "ISTJ": {
+                tag: "📚 LEARNER｜宿舍学霸",
+                desc: "人设标签：自律独行侠・靠谱卷王<br><br>解析：你是宿舍里的“自律天花板”，早出晚归泡图书馆，作息卫生全在线。边界感极强，不参与宿舍八卦，矛盾时理性回避，不内耗不吵架。独来独往但超靠谱，答应的事一定会做到，就是偶尔有点太冷淡啦～<br><br>网感梗：宿舍版独行侠，主打一个 “莫挨老子，别来沾边”"
+            },
+            "INFP": {
+                tag: "🎨 I'M OK｜宿舍玻璃",
+                desc: "人设标签：玻璃心文艺・情绪收藏家<br><br>解析：你是宿舍里的“细腻担当”，熬夜党 + 卫生随缘选手，心思却比谁都敏感。室友一句无心的话，你能脑补出一场大戏，矛盾时只会偷偷躲在床帘里难过。共情力拉满，总能get到别人的情绪，就是别太内耗啦，大家都很喜欢你！<br><br>网感梗：宿舍版玻璃心，主打一个 “你没说，但我懂了”"
+            },
+            "INTP": {
+                tag: "😴 Sleeper｜宿舍佛系",
+                desc: "人设标签：佛系躺平党・矛盾绝缘体<br><br>解析：你是宿舍里的“佛系天花板”，熬夜摆烂 + 卫生随缘，啥都无所谓。矛盾时你既不吵也不闹，爱咋咋地，是宿舍里的“矛盾绝缘体”。边界感极强，谁也别想管你，也懒得管别人，就是偶尔有点太冷漠啦～<br><br>网感梗：宿舍版躺平选手，主打一个 “与世无争，别来烦我”"
+            }
+        };
+
+        let currentQ = 0;
+        let scores = { EI: 0, SN: 0, TF: 0, JP: 0 };
+
+        function showPage(n) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('page' + n).classList.add('active');
+        }
+
+        function startTest() {
+            currentQ = 0;
+            scores = { EI: 0, SN: 0, TF: 0, JP: 0 };
+            loadQuestion();
+            showPage(1);
+        }
+
+        function loadQuestion() {
+            const q = questions[currentQ];
+            document.getElementById('progress').innerText = `第 ${currentQ + 1} / ${questions.length} 题`;
+            document.getElementById('question').innerText = q.q;
+            const optsDiv = document.getElementById('options');
+            optsDiv.innerHTML = '';
+            q.opts.forEach((optText, idx) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.innerText = optText;
+                div.onclick = () => {
+                    // 计分规则：A(0)=加1分，B(1)=不加分，C(2)=加0.5分（折中选项）
+                    if (idx === 0) {
+                        scores[q.dim] += 1;
+                    } else if (idx === 2) {
+                        scores[q.dim] += 0.5;
+                    }
+                    currentQ++;
+                    if (currentQ >= questions.length) {
+                        showResult();
+                    } else {
+                        loadQuestion();
+                    }
+                };
+                optsDiv.appendChild(div);
+            });
+        }
+
+        function showResult() {
+            // 计算四个维度的结果（7/8题，总分7/8分，超过一半算该维度）
+            const EI = scores.EI > 3.5 ? 'E' : 'I';
+            const SN = scores.SN > 3.5 ? 'S' : 'N';
+            const TF = scores.TF > 4 ? 'T' : 'F';
+            const JP = scores.JP > 4 ? 'J' : 'P';
+            const code = EI + SN + TF + JP;
+
+            const persona = personas[code] || personas["INTP"]; // 默认值
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `
+                <div class="persona-tag">${persona.tag}</div>
+                <div class="persona-desc">${persona.desc}</div>
+                <p style="margin-top:20px; color:#666; text-align:center; font-size:14px;">仅供娱乐，宿舍相处还是要靠互相包容呀~</p>
+                <button class="btn" onclick="startTest()">再测一次</button>
+            `;
+            showPage(2);
+        }
+    </script>
+</body>
+</html>
